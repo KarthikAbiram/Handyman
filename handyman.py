@@ -1,3 +1,4 @@
+import sys
 import subprocess
 from pathlib import Path
 import shutil
@@ -6,7 +7,7 @@ import pandas as pd
 from fire import Fire
 
 class Handyman():
-    def choice(self, input_directory):
+    def choice(self, input_directory=r"Choices"):
         """
         Given a directory, list all subfolders as 1,2,3... as options to user
         and request user to make a choice amomg 1,2,3..
@@ -57,6 +58,9 @@ class Handyman():
 
         # Execute the .bat file
         subprocess.run([str(run_bat)], shell=True)
+
+        # Wait for user input before exiting
+        input("\nPress any key to exit...")
 
     def rename(self, input_file, log_file=None):
         """
@@ -125,5 +129,15 @@ class Handyman():
         logging.info("All files successfully moved/renamed.")
 
 if __name__ == "__main__":
-    Fire(Handyman)
+    # If no arguments are given, run a custom default function
+    if len(sys.argv) == 1:
+        choices_folder = Path("Choices")
+        if choices_folder.exists() and choices_folder.is_dir():
+            print('No arguments provided. Launching choice menu using "Choices" folder...')
+            Handyman().choice(choices_folder)
+        else:
+            print('No arguments provided, and "Choices" folder not found.')
+            Fire(Handyman)
+    else:
+        Fire(Handyman)
 
