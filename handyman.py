@@ -83,6 +83,9 @@ class Handyman():
             handlers=log_handlers
         )
 
+        input_path = Path(input_file).resolve()
+        csv_dir = input_path.parent  # <-- base directory for relative paths
+
         df = pd.read_csv(input_file)
 
         # Validate CSV structure
@@ -91,9 +94,9 @@ class Handyman():
             logging.error(f"CSV missing required columns: {required}")
             raise ValueError(f"CSV must have columns: {required}")
 
-        # Convert to Path
-        df["Source"] = df["Source"].apply(Path)
-        df["Destination"] = df["Destination"].apply(Path)
+        # Convert to Path and resolve relative paths
+        df["Source"] = df["Source"].apply(lambda p: (csv_dir / p).resolve() if not Path(p).is_absolute() else Path(p))
+        df["Destination"] = df["Destination"].apply(lambda p: (csv_dir / p).resolve() if not Path(p).is_absolute() else Path(p))
 
         # Check all source files exist
         missing = [str(src) for src in df["Source"] if not src.exists()]
@@ -105,6 +108,7 @@ class Handyman():
 
         # Process each move
         for src, dst in zip(df["Source"], df["Destination"]):
+
             # Ensure destination directory exists
             if not dst.parent.exists():
                 logging.info(f"Creating destination directory: {dst.parent}")
@@ -119,7 +123,6 @@ class Handyman():
             shutil.move(str(src), str(dst))
 
         logging.info("All files successfully moved/renamed.")
-
 
 if __name__ == "__main__":
     Fire(Handyman)
